@@ -1,0 +1,63 @@
+{
+  "name": "ExpenseApprovalFlow",
+  "trigger": "Dataverse: When a row is added (Table = Expenses, Scope = Organization)",
+  "steps": [
+    {
+      "action": "Approvals.StartAndWait",
+      "inputs": {
+        "approvalType": "Approve/Reject – First to respond",
+        "title": "Expense Approval: @{triggerBody()?['Title']}",
+        "assignedTo": "@{triggerBody()?['ManagerEmail']}",
+        "details": "Employee: @{triggerBody()?['Employee']}<br/>Amount: @{triggerBody()?['Amount']}<br/>Category: @{triggerBody()?['Category']}"
+      },
+      "outputs": "@{outputs('Approvals.StartAndWait')?['body/outcome']}"
+    },
+    {
+      "condition": "@equals(outputs('Approvals.StartAndWait')?['body/outcome'],'Approve')",
+      "ifTrue": [
+        {
+          "action": "Dataverse.UpdateRow",
+          "inputs": {
+            "table": "Expenses",
+            "rowId": "@{triggerBody()?['ExpenseID']}",
+            "fields": { "Status": "Approved" }
+          }
+        },
+        {
+          "action": "Teams.PostMessage",
+          "inputs": {
+            "team": "Finance",
+            "channel": "Expense Approvals",
+            "message": "✅ @{triggerBody()?['Employee']}'s expense **@{triggerBody()?['Title']}** was *Approved*."
+          }
+        },
+        {
+          "action": "Outlook.SendEmail",
+          "inputs": {
+            "to": "@{triggerBody()?['EmployeeEmail']}",
+            "subject": "Expense Approved",
+            "body": "Hi @{triggerBody()?['Employee']}, your expense '@{triggerBody()?['Title']}' has been approved."
+          }
+        }
+      ],
+      "ifFalse": [
+        {
+          "action": "Dataverse.UpdateRow",
+          "inputs": {
+            "table": "Expenses",
+            "rowId": "@{triggerBody()?['ExpenseID']}",
+            "fields": { "Status": "Rejected" }
+          }
+        },
+        {
+          "action": "Outlook.SendEmail",
+          "inputs": {
+            "to": "@{triggerBody()?['EmployeeEmail']}",
+            "subject": "Expense Rejected",
+            "body": "Hi @{triggerBody()?['Employee']}, your expense '@{triggerBody()?['Title']}' was not approved."
+          }
+        }
+      ]
+    }
+  ]
+}
