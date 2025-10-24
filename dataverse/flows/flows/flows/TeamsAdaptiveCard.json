@@ -1,0 +1,16 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    { "type": "TextBlock", "text": "Expense Approval Request", "weight": "Bolder", "size": "Large" },
+    { "type": "TextBlock", "text": "Title: ${title}" },
+    { "type": "TextBlock", "text": "Employee: ${employee}" },
+    { "type": "TextBlock", "text": "Amount: ${amount}" },
+    { "type": "TextBlock", "text": "Category: ${category}" }
+  ],
+  "actions": [
+    { "type": "Action.Submit", "title": "Approve", "data": { "decision": "Approved" } },
+    { "type": "Action.Submit", "title": "Reject",  "data": { "decision": "Rejected" } }
+  ]
+}
